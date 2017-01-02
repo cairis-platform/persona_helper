@@ -1,6 +1,6 @@
 # persona_helper
 
-This is the soruce code for the [Persona Helper](https://chrome.google.com/webstore/detail/persona-helper/mhojpjjecjmdbbooonpglohcedhnjkho?hl=en) Chrome Extension. This allows users of CAIRIS to add factoids based on online sources.  These can be used as the basis for specifying persona characteristics in CAIRIS.  
+This is the source code for the [Persona Helper](https://chrome.google.com/webstore/detail/persona-helper/mhojpjjecjmdbbooonpglohcedhnjkho?hl=en) Chrome Extension. This allows users of CAIRIS to add factoids based on online resources.  These can be used as the basis for specifying persona characteristics in CAIRIS.  
 
 To use, simply:
 
