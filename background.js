@@ -14,17 +14,27 @@
     under the License.
     Author: Shamal Faily */
 
-var serverIP = localStorage.getItem('cairis_url') || "Undefined";
-if (serverIP == 'Undefined') {
-  serverIP = prompt("Set CAIRIS URL","http://germaneriposte.org:7071");
+function setCairisUrl(defaultValue) {
+  var serverIP = prompt("Set CAIRIS URL",defaultValue);
   localStorage.setItem('cairis_url',serverIP);
+  return serverIP;
+}
+
+function setContributor(defaultValue) {
+  var contributorName = prompt("Set contributor",defaultValue);
+  localStorage.setItem('document_reference_contributor',contributorName);
+  return contributorName;
+}
+
+function setAuthor(defaultValue) {
+  var authorName = prompt("Set author",defaultValue);
+  localStorage.setItem('external_document_author',authorName);
 }
 
 function addDocumentReference(external_document_name,hTxt) {
   var contributorName = localStorage.getItem('document_reference_contributor') || "Undefined";
   if (contributorName == 'Undefined') {
-    contributorName = prompt("Set contributor","Undefined");
-    localStorage.setItem('document_reference_contributor',contributorName);
+    contributorName = setContributor('Undefined');
   }
 
   var x = prompt( "Factoid", hTxt);
@@ -38,6 +48,12 @@ function addDocumentReference(external_document_name,hTxt) {
   output.object = dr;
   output.session_id = 'test';
   output = JSON.stringify(output);
+
+  var serverIP = localStorage.getItem('cairis_url') || "Undefined";
+  if (serverIP == 'Undefined') {
+    serverIP = setCairisUrl('Undefined');
+  }
+
   $.ajax({
     type: "POST",
     dataType: "json",
@@ -58,11 +74,13 @@ function addDocumentReference(external_document_name,hTxt) {
   });
 }
 
+
+
 chrome.browserAction.onClicked.addListener(function(tab) {
-  var authorName = localStorage.getItem('external_document_author') || "Undefined";
-  if (authorName == 'Undefined') {
-    authorName = prompt("Set author","Undefined");
-    localStorage.setItem('external_document_author',authorName);
+
+  var serverIP = localStorage.getItem('cairis_url') || "Undefined";
+  if (serverIP == 'Undefined') {
+    serverIP = setCairisUrl('Undefined');
   }
 
   $.ajax({
@@ -81,6 +99,12 @@ chrome.browserAction.onClicked.addListener(function(tab) {
     },
     error: function (xhr, textStatus, errorThrown) {
       if (xhr.status == 404) {
+
+        var authorName = localStorage.getItem('external_document_author') || "Undefined";
+        if (authorName == 'Undefined') {
+          setAuthor('Undefined');
+        }
+
         var edoc= {
           'theName': tab.title.replace(/'/g, "\\'"),
           'theVersion': '1',
@@ -117,4 +141,28 @@ chrome.browserAction.onClicked.addListener(function(tab) {
       }
     }
   });
+});
+
+chrome.contextMenus.create({
+  "title": "Set CAIRIS URL",
+  "contexts": ["browser_action"],
+  "onclick" : function() {
+    setCairisUrl(localStorage.getItem('cairis_url') || "Undefined");
+  }
+});
+
+chrome.contextMenus.create({
+  "title": "Set Author",
+  "contexts": ["browser_action"],
+  "onclick" : function() {
+    setAuthor(localStorage.getItem('external_document_author') || "Undefined");
+  }
+});
+
+chrome.contextMenus.create({
+  "title": "Set Contributor",
+  "contexts": ["browser_action"],
+  "onclick" : function() {
+    setContributor(localStorage.getItem('document_reference_contributor') || "Undefined");
+  }
 });
