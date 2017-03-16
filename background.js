@@ -151,7 +151,7 @@ chrome.browserAction.onClicked.addListener(function(tab) {
     dataType: "json",
     accept: "application/json",
     crossDomain: true,
-    data: {session_id : 'test'},
+    data: {session_id : localStorage.getItem('session_id')},
     url: serverIP + "/api/external_documents/name/" + encodeURIComponent(tab.title.replace(/'/g, "\\'")) + "?session_id=" + localStorage.getItem('session_id') || 'test',
     success: function (data) {
       chrome.tabs.executeScript({
