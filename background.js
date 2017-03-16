@@ -20,6 +20,69 @@ function setCairisUrl(defaultValue) {
   return serverIP;
 }
 
+function setCairisSession() {
+  var output = {};
+  var serverIP = localStorage.getItem('cairis_url') || "Undefined";
+  if (serverIP == 'Undefined') {
+    serverIP = setCairisUrl('Undefined');
+  }
+  $.ajax({
+    type: "POST",
+    dataType: "json",
+    contentType: "application/json; charset=utf-8",
+    accept: "application/json",
+    crossDomain: true,
+    processData: false,
+    origin: serverIP,
+    data: output,
+    cache: false,
+    url: serverIP + "/api/session",
+    beforeSend: function(xhr) {
+      xhr.setRequestHeader('Authorization','Basic dGVzdDp0ZXN0');
+    },
+    success: function (data) {
+      localStorage.setItem('session_id',data.session_id);
+      alert('Session set');
+    },
+    error: function (xhr, textStatus, errorThrown) {
+      var error = JSON.parse(xhr.responseText);
+      alert(String(error.message));
+    }
+  });
+}
+
+function setCairisDatabase() {
+  var dbName = prompt("Set database",'cairis_default');
+
+  var output = {};
+  output.session_id = localStorage.getItem('session_id');
+  output = JSON.stringify(output);
+
+  var serverIP = localStorage.getItem('cairis_url') || "Undefined";
+  if (serverIP == 'Undefined') {
+    serverIP = setCairisUrl('Undefined');
+  }
+
+  $.ajax({
+    type: "POST",
+    dataType: "json",
+    contentType: "application/json",
+    accept: "application/json",
+    crossDomain: true,
+    processData: false,
+    origin: serverIP,
+    data: output,
+    url: serverIP + "/api/settings/database/" + dbName + "/open",
+    success: function (data) {
+      alert('Database opened');
+    },
+    error: function (xhr, textStatus, errorThrown) {
+      var error = JSON.parse(xhr.responseText);
+      alert(String(error.message));
+    }
+  });
+}
+
 function setContributor(defaultValue) {
   var contributorName = prompt("Set contributor",defaultValue);
   localStorage.setItem('document_reference_contributor',contributorName);
@@ -46,7 +109,7 @@ function addDocumentReference(external_document_name,hTxt) {
   };
   var output = {};
   output.object = dr;
-  output.session_id = 'test';
+  output.session_id = localStorage.getItem('session_id');
   output = JSON.stringify(output);
 
   var serverIP = localStorage.getItem('cairis_url') || "Undefined";
@@ -63,7 +126,7 @@ function addDocumentReference(external_document_name,hTxt) {
     processData: false,
     origin: serverIP,
     data: output,
-    url: serverIP + "/api/document_references" + "?session_id=test",
+    url: serverIP + "/api/document_references",
     success: function (data) {
       alert('Factoid added');
     },
@@ -81,7 +144,7 @@ chrome.browserAction.onClicked.addListener(function(tab) {
   var serverIP = localStorage.getItem('cairis_url') || "Undefined";
   if (serverIP == 'Undefined') {
     serverIP = setCairisUrl('Undefined');
-  }
+  } 
 
   $.ajax({
     type: "GET",
@@ -89,7 +152,7 @@ chrome.browserAction.onClicked.addListener(function(tab) {
     accept: "application/json",
     crossDomain: true,
     data: {session_id : 'test'},
-    url: serverIP + "/api/external_documents/name/" + encodeURIComponent(tab.title.replace(/'/g, "\\'")) + "?session_id=test",
+    url: serverIP + "/api/external_documents/name/" + encodeURIComponent(tab.title.replace(/'/g, "\\'")) + "?session_id=" + localStorage.getItem('session_id') || 'test',
     success: function (data) {
       chrome.tabs.executeScript({
         code: "window.getSelection().toString();"
@@ -114,7 +177,7 @@ chrome.browserAction.onClicked.addListener(function(tab) {
         };
         var output= {};
         output.object=edoc;
-        output.session_id='test';
+        output.session_id=localStorage.getItem('session_id') || 'test'
         output=JSON.stringify(output);
         $.ajax( {
           type: "POST",
@@ -125,7 +188,7 @@ chrome.browserAction.onClicked.addListener(function(tab) {
           processData: false,
           origin: serverIP,
           data: output,
-          url: serverIP + "/api/external_documents" + "?session_id=test",
+          url: serverIP + "/api/external_documents",
           success: function (data) {
             chrome.tabs.executeScript({
               code: "window.getSelection().toString();"
@@ -148,6 +211,22 @@ chrome.contextMenus.create({
   "contexts": ["browser_action"],
   "onclick" : function() {
     setCairisUrl(localStorage.getItem('cairis_url') || "Undefined");
+  }
+});
+
+chrome.contextMenus.create({
+  "title": "Set CAIRIS session",
+  "contexts": ["browser_action"],
+  "onclick" : function() {
+    setCairisSession();
+  }
+});
+
+chrome.contextMenus.create({
+  "title": "Set CAIRIS database",
+  "contexts": ["browser_action"],
+  "onclick" : function() {
+    setCairisDatabase();
   }
 });
 
