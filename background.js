@@ -14,54 +14,34 @@
     under the License.
     Author: Shamal Faily */
 
+chrome.windows.onCreated.addListener(function() {
+  localStorage.removeItem('cairis_url');
+  localStorage.removeItem('session_id');
+  localStorage.removeItem('external_document_author');
+  localStorage.removeItem('document_reference_contributor');
+  toggleMenus(false);
+});
 function setCairisUrl(defaultValue) {
   var serverIP = prompt("Set CAIRIS URL",defaultValue);
   localStorage.setItem('cairis_url',serverIP);
-  return serverIP;
 }
 
 function setCairisSession() {
-  var output = {};
-  var serverIP = localStorage.getItem('cairis_url') || "Undefined";
-  if (serverIP == 'Undefined') {
-    serverIP = setCairisUrl('Undefined');
-  }
-  $.ajax({
-    type: "POST",
-    dataType: "json",
-    contentType: "application/json; charset=utf-8",
-    accept: "application/json",
-    crossDomain: true,
-    processData: false,
-    origin: serverIP,
-    data: output,
-    cache: false,
-    url: serverIP + "/api/session",
-    beforeSend: function(xhr) {
-      xhr.setRequestHeader('Authorization','Basic dGVzdDp0ZXN0');
-    },
-    success: function (data) {
-      localStorage.setItem('session_id',data.session_id);
-      alert('Session set');
-    },
-    error: function (xhr, textStatus, errorThrown) {
-      var error = JSON.parse(xhr.responseText);
-      alert(String(error.message));
+  chrome.windows.create({'url' : 'popup.html','type':'popup','width':275,'height':155,'focused':true},function() {
+    var serverIP = localStorage.getItem('cairis_url');
+    if (serverIP == null) {
+      setCairisUrl('Undefined');
     }
   });
 }
 
 function setCairisDatabase() {
   var dbName = prompt("Set database",'cairis_default');
-
+  var sessionId = localStorage.getItem('session_id');
   var output = {};
-  output.session_id = localStorage.getItem('session_id');
+  output.session_id = sessionId;
   output = JSON.stringify(output);
-
-  var serverIP = localStorage.getItem('cairis_url') || "Undefined";
-  if (serverIP == 'Undefined') {
-    serverIP = setCairisUrl('Undefined');
-  }
+  var serverIP = localStorage.getItem('cairis_url');
 
   $.ajax({
     type: "POST",
@@ -95,11 +75,10 @@ function setAuthor(defaultValue) {
 }
 
 function addDocumentReference(external_document_name,hTxt) {
-  var contributorName = localStorage.getItem('document_reference_contributor') || "Undefined";
-  if (contributorName == 'Undefined') {
+  var contributorName = localStorage.getItem('document_reference_contributor');
+  if (contributorName == null) {
     contributorName = setContributor('Undefined');
   }
-
   var x = prompt( "Factoid", hTxt);
   var dr = {
     'theName': x.replace(/'/g, "\\'"),
@@ -107,15 +86,14 @@ function addDocumentReference(external_document_name,hTxt) {
     'theContributor': contributorName,
     'theExcerpt': hTxt
   };
+ 
+  var sessionId = localStorage.getItem('session_id');
   var output = {};
   output.object = dr;
-  output.session_id = localStorage.getItem('session_id');
+  output.session_id = sessionId;
   output = JSON.stringify(output);
 
-  var serverIP = localStorage.getItem('cairis_url') || "Undefined";
-  if (serverIP == 'Undefined') {
-    serverIP = setCairisUrl('Undefined');
-  }
+  var serverIP = localStorage.getItem('cairis_url');
 
   $.ajax({
     type: "POST",
@@ -140,108 +118,131 @@ function addDocumentReference(external_document_name,hTxt) {
 
 
 chrome.browserAction.onClicked.addListener(function(tab) {
-
-  var serverIP = localStorage.getItem('cairis_url') || "Undefined";
-  if (serverIP == 'Undefined') {
-    serverIP = setCairisUrl('Undefined');
-  } 
-
-  $.ajax({
-    type: "GET",
-    dataType: "json",
-    accept: "application/json",
-    crossDomain: true,
-    data: {session_id : localStorage.getItem('session_id')},
-    url: serverIP + "/api/external_documents/name/" + encodeURIComponent(tab.title.replace(/'/g, "\\'")) + "?session_id=" + localStorage.getItem('session_id') || 'test',
-    success: function (data) {
-      chrome.tabs.executeScript({
-        code: "window.getSelection().toString();"
-      }, function(selection) {
-        addDocumentReference(tab.title,String(selection[0]));
-      });
-    },
-    error: function (xhr, textStatus, errorThrown) {
-      if (xhr.status == 404) {
-
-        var authorName = localStorage.getItem('external_document_author') || "Undefined";
-        if (authorName == 'Undefined') {
-          setAuthor('Undefined');
-        }
-
-        var edoc= {
-          'theName': tab.title.replace(/'/g, "\\'"),
-          'theVersion': '1',
-          'thePublicationDate': document.lastModified,
-          'theAuthors': authorName,
-          'theDescription': tab.url
-        };
-        var output= {};
-        output.object=edoc;
-        output.session_id=localStorage.getItem('session_id') || 'test'
-        output=JSON.stringify(output);
-        $.ajax( {
-          type: "POST",
-          dataType: "json",
-          contentType: "application/json",
-          accept: "application/json",
-          crossDomain: true,
-          processData: false,
-          origin: serverIP,
-          data: output,
-          url: serverIP + "/api/external_documents",
-          success: function (data) {
-            chrome.tabs.executeScript({
-              code: "window.getSelection().toString();"
-            }, function(selection) {
-              addDocumentReference(tab.title,String(selection[0]));
-            });
-          },
-          error: function (xhr, textStatus, errorThrown) {
-            var error=JSON.parse(xhr.responseText);
-            alert(String(error.message));
-          }
+  var sessionId = localStorage.getItem('session_id');
+  if (sessionId == null) {
+    alert('Not connected to CAIRIS');
+  }
+  else {
+    var serverIP = localStorage.getItem('cairis_url');
+    $.ajax({
+      type: "GET",
+      dataType: "json",
+      accept: "application/json",
+      crossDomain: true,
+      data: {session_id : sessionId},
+      url: serverIP + "/api/external_documents/name/" + encodeURIComponent(tab.title.replace(/'/g, "\\'")) + "?session_id=" + sessionId,
+      success: function (data) {
+        chrome.tabs.executeScript({
+          code: "window.getSelection().toString();"
+        }, function(selection) {
+          addDocumentReference(tab.title,String(selection[0]));
         });
+      },
+      error: function (xhr, textStatus, errorThrown) {
+        if (xhr.status == 404) {
+          var authorName = localStorage.getItem('external_document_author');
+          if (authorName == null) {
+            setAuthor('Undefined');
+          }
+          var edoc= {
+            'theName': tab.title.replace(/'/g, "\\'"),
+            'theVersion': '1',
+            'thePublicationDate': document.lastModified,
+            'theAuthors': authorName,
+            'theDescription': tab.url
+          };
+          var output= {};
+          output.object=edoc;
+          output.session_id=sessionId;
+          output=JSON.stringify(output);
+          $.ajax({
+            type: "POST",
+            dataType: "json",
+            contentType: "application/json",
+            accept: "application/json",
+            crossDomain: true,
+            processData: false,
+            origin: serverIP,
+            data: output,
+            url: serverIP + "/api/external_documents",
+            success: function (data) {
+              chrome.tabs.executeScript({
+                code: "window.getSelection().toString();"
+              }, function(selection) {
+                addDocumentReference(tab.title,String(selection[0]));
+              });
+            },
+            error: function (xhr, textStatus, errorThrown) {
+              var error=JSON.parse(xhr.responseText);
+              alert(String(error.message));
+            }
+          });
+        }
       }
-    }
-  });
-});
-
-chrome.contextMenus.create({
-  "title": "Set CAIRIS URL",
-  "contexts": ["browser_action"],
-  "onclick" : function() {
-    setCairisUrl(localStorage.getItem('cairis_url') || "Undefined");
+    });
   }
 });
 
-chrome.contextMenus.create({
-  "title": "Set CAIRIS session",
+var connectMenu = chrome.contextMenus.create({
+  "title": "Connect to CAIRIS",
   "contexts": ["browser_action"],
   "onclick" : function() {
     setCairisSession();
   }
 });
 
-chrome.contextMenus.create({
-  "title": "Set CAIRIS database",
+var changeDbMenu = chrome.contextMenus.create({
+  "title": "Change CAIRIS database",
   "contexts": ["browser_action"],
   "onclick" : function() {
     setCairisDatabase();
-  }
+  },
+  "enabled" : false
 });
 
-chrome.contextMenus.create({
+var setAuthorMenu = chrome.contextMenus.create({
   "title": "Set Author",
   "contexts": ["browser_action"],
   "onclick" : function() {
     setAuthor(localStorage.getItem('external_document_author') || "Undefined");
-  }
+  },
+  "enabled" : false
 });
 
-chrome.contextMenus.create({
+var setContributorMenu = chrome.contextMenus.create({
   "title": "Set Contributor",
   "contexts": ["browser_action"],
   "onclick" : function() {
     setContributor(localStorage.getItem('document_reference_contributor') || "Undefined");
-  }
+  },
+  "enabled" : false
 });
+
+function toggleMenus(isEnabled) {
+  chrome.contextMenus.update(changeDbMenu,{
+    "title": "Change CAIRIS database",
+    "contexts": ["browser_action"],
+    "onclick" : function() {
+      setCairisDatabase();
+    },
+    "enabled" : isEnabled
+  });
+
+  chrome.contextMenus.update(setAuthorMenu,{
+    "title": "Set Author",
+    "contexts": ["browser_action"],
+    "onclick" : function() {
+      setAuthor(localStorage.getItem('external_document_author') || "Undefined");
+    },
+    "enabled" : isEnabled
+});
+
+  chrome.contextMenus.update(setContributorMenu,{
+    "title": "Set Contributor",
+    "contexts": ["browser_action"],
+    "onclick" : function() {
+      setContributor(localStorage.getItem('document_reference_contributor') || "Undefined");
+    },
+    "enabled" : isEnabled
+  });
+}
