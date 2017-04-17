@@ -8,7 +8,3 @@ To use, simply:
 * Click on the extension button.  You will be asked to specify a factoid summarising the evidence highlighted
 * Clicking on 'Ok' will add a new *Document Reference* to CAIRIS representing the factoid.
 * Right click on the extension button to change the CAIRIS URL, author, or contributor settings
-
-Notes when using this extension:
-
-* The extension relies on the 'test' session that comes with default CAIRIS installation.  Later versions will support authentication with CAIRIS, so only legitimate users can add factoids
