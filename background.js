@@ -143,6 +143,7 @@ chrome.browserAction.onClicked.addListener(function(tab) {
           var authorName = localStorage.getItem('external_document_author');
           if (authorName == null) {
             setAuthor('Undefined');
+            authorName = localStorage.getItem('external_document_author');
           }
           var edoc= {
             'theName': tab.title.replace(/'/g, "\\'"),
