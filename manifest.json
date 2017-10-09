@@ -1,7 +1,7 @@
 {
  "name": "Persona Helper",
  "description": "Creates factoids from online data which can be used to specify persona characteristics in CAIRIS",
- "version": "0.6",
+ "version": "0.7",
  "short_name" : "PersonaHlpr",
  "homepage_url" : "http://cairis.org",
  "manifest_version": 2,
