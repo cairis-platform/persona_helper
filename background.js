@@ -81,8 +81,8 @@ function addDocumentReference(external_document_name,hTxt) {
   }
   var x = prompt( "Factoid", hTxt);
   var dr = {
-    'theName': x.replace(/'/g, "\\'"),
-    'theDocName': external_document_name.replace(/'/g, "\\'"),
+    'theName': x,
+    'theDocName': external_document_name,
     'theContributor': contributorName,
     'theExcerpt': hTxt
   };
@@ -130,7 +130,7 @@ chrome.browserAction.onClicked.addListener(function(tab) {
       accept: "application/json",
       crossDomain: true,
       data: {session_id : sessionId},
-      url: serverIP + "/api/external_documents/name/" + encodeURIComponent(tab.title.replace(/'/g, "\\'")) + "?session_id=" + sessionId,
+      url: serverIP + "/api/external_documents/name/" + encodeURIComponent(tab.title) + "?session_id=" + sessionId,
       success: function (data) {
         chrome.tabs.executeScript({
           code: "window.getSelection().toString();"
@@ -146,7 +146,7 @@ chrome.browserAction.onClicked.addListener(function(tab) {
             authorName = localStorage.getItem('external_document_author');
           }
           var edoc= {
-            'theName': tab.title.replace(/'/g, "\\'"),
+            'theName': tab.title,
             'theVersion': '1',
             'thePublicationDate': document.lastModified,
             'theAuthors': authorName,
