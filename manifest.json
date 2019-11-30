@@ -23,12 +23,5 @@
      "48": "icon-48.png",
      "128": "icon-128.png" 
  },
- "permissions": [
-     "tabs",
-     "activeTab",
-     "cookies",
-     "contextMenus",
-     "http://*/*",
-     "https://*/*"
- ]
+ "permissions": ["activeTab","contextMenus"]
 }
